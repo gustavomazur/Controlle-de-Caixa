@@ -1,180 +1,124 @@
 # Contadora API
 
-## Introdução
+API para gerenciamento financeiro e controle de estoque de uma loja.
 
-A **Contadora API** é uma aplicação backend para **gestão financeira e controle de produtos de uma loja**. Ela permite cadastrar produtos, controlar estoque, registrar vendas e calcular lucros, servindo como base para sistemas de controle comercial.
+## Descrição
 
-Este projeto foi desenvolvido com foco em aprendizado prático de **Spring Boot**, **API REST** e **boas práticas de backend**.
+A **Contadora API** é uma aplicação backend desenvolvida em Java com Spring Boot. Ela permite o cadastro de produtos, controle de estoque, registro de vendas e cálculo de lucros. O projeto é ideal para quem deseja entender como construir uma API RESTful completa com integração a banco de dados e containerização esta em andamento.
 
----
+## Tecnologias
 
-## Tecnologias Utilizadas
+*   **Java 17**
+*   **Spring Boot 3**
+*   **Spring Data JPA**
+*   **MySQL**
+*   **Flyway** (Gerenciamento de Migrations)
+*   **Docker & Docker Compose**
+*   **Lombok**
+*   **Maven**
 
-* **Java 17**
-* **Spring Boot 3**
-* **Spring Data JPA**
-* **MySQL 8**
-* **Flyway** (versionamento do banco de dados)
-* **Docker & Docker Compose**
-* **Lombok**
-* **Maven**
+## Pré-requisitos
 
----
+Para rodar este projeto localmente, você precisará ter instalado:
 
-## Começando
-
-### Pré-requisitos
-
-Antes de iniciar, você precisa ter instalado:
-
-* **Java 17**
-* **Docker**
-* **Docker Compose**
-* **Git**
-
----
+*   **Java 17** ou superior
+*   **Docker** e **Docker Compose**
+*   **Git**
 
 ## Instalação e Execução
 
-### 1️Clonar o repositório
+Siga os passos abaixo para rodar a aplicação no seu computador:
+
+### 1. Clonar o repositório
+
+Abra o terminal e execute:
 
 ```bash
-git clone https://github.com/gustavomazur/Controle-venda.git
+git clone https://github.com/gustavomazur/contadora-api.git
 cd contadora-api
 ```
 
-### 2️Subir o banco de dados com Docker
+### 2. Subir o Banco de Dados
+
+O projeto utiliza um arquivo `docker-compose.yaml` para facilitar a configuração do banco de dados MySQL. Execute:
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
-Isso irá subir um container MySQL configurado para o projeto.
+Isso irá baixar a imagem do MySQL e iniciar o container na porta `3306`.
 
-### 3️Executar a aplicação
+### 3. Rodar a Aplicação
 
+Você não precisa ter o Maven instalado globalmente, pois o projeto inclui o Maven Wrapper.
+
+**No Linux/macOS:**
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-A aplicação estará disponível em:
-
-```
-http://localhost:8080
-```
-
----
-
-## Banco de Dados e Migrations
-
-O projeto utiliza **Flyway** para versionamento do banco.
-
-As migrations ficam em:
-
-```
-src/main/resources/db/migration
+**No Windows (Prompt de Comando ou PowerShell):**
+```cmd
+mvnw spring-boot:run
 ```
 
-Exemplo:
+A aplicação iniciará e estará disponível em `http://localhost:8080`.
 
-```
-V1__create_table_produto.sql
-```
+## Configuração do Banco de Dados
 
-As migrations são executadas automaticamente ao iniciar a aplicação.
+As credenciais do banco de dados já estão configuradas por padrão para o ambiente de desenvolvimento:
 
----
+*   **URL**: `jdbc:mysql://localhost:3306/contador_loja`
+*   **Usuário**: `app_user`
+*   **Senha**: `app_password`
+
+Caso queira alterar, edite o arquivo `src/main/resources/application.properties` e o `docker-compose.yaml`.
 
 ## Endpoints da API
 
-### Produto
+Aqui estão os principais endpoints disponíveis para testar (você pode usar o Postman ou Insomnia):
 
-#### Criar produto
+### Produtos
 
-```
-POST /produto
-```
+*   **Cadastrar Produto**
+    *   `POST /produto`
+    *   Body (JSON):
+        ```json
+        {
+          "nome": "Camiseta",
+          "preco": 49.90,
+          "quantidade": 100
+        }
+        ```
 
-#### Listar produtos
+*   **Listar Produtos**
+    *   `GET /produto`
 
-```
-GET /produto
-```
+*   **Atualizar Produto**
+    *   `PUT /produto`
+    *   Body (JSON):
+        ```json
+        {
+          "id": 1,
+          "nome": "Camiseta Azul",
+          "preco": 55.00
+        }
+        ```
 
-#### Atualizar produto
+*   **Deletar Produto**
+    *   `DELETE /produto/{id}`
 
-```
-PUT /produto
-```
+*   **Vender Produto**
+    *   `POST /produto/{id}/vender/{quantidade}`
+    *   Exemplo: `POST /produto/1/vender/2` (Vende 2 unidades do produto ID 1)
 
-#### Deletar produto
-
-```
-DELETE /produto/{id}
-```
-
-#### Calcular lucro total
-
-```
-GET /produto/lucro-total
-```
-
-#### Vender produto
-
-```
-POST /produto/{id}/vender/{quantidade}
-```
-
----
+*   **Calcular Lucro Total**
+    *   `GET /produto/lucro-total`
 
 ## Estrutura do Projeto
 
-```text
-src/main/java
-├── controller
-│   └── ProdutoController.java
-├── model
-│   └── Produto.java
-├── DTO
-│   ├── DadosCadastrarProdutoDTO.java
-│   └── DadosAtualizarProdutoDTO.java
-└── br/com/contadora/contadora_api
-    └── ContadoraApiApplication.java
-```
+O código fonte principal encontra-se em `src/main/java/br/com/contadora/contadora_api`.
 
-**Observação importante**
+## Licença
 
-Atualmente, os pacotes `controller`, `model` e `DTO` estão diretamente na raiz de `src/main/java`, enquanto a classe principal da aplicação está em `br.com.contadora.contadora_api`.
-
-Isso **pode causar problemas de component scan no Spring Boot**. O ideal, futuramente, é mover todos os pacotes para dentro do mesmo pacote base (`br.com.contadora.contadora_api`).
-
----
-
-## Verificação Manual
-
-Após subir o projeto:
-
-* Acesse os endpoints via **Postman**, **Insomnia** ou navegador
-* Verifique se o banco foi criado corretamente
-* Confirme no log que o Flyway executou as migrations
-
----
-
-## Observações Finais
-
-Este projeto tem foco educacional, mas segue práticas usadas no mercado, como:
-
-* Versionamento de banco
-* API REST organizada
-* Separação de responsabilidades
-
-Evoluções futuras podem incluir:
-
-* Autenticação
-* Paginação
-* Validações mais robustas
-* Refatoração de estrutura de pacotes
-
----
-
-Projeto em desenvolvimento para aprendizado e evolução contínua.
+Este projeto está licenciado sob a licença [MIT](LICENSE).
