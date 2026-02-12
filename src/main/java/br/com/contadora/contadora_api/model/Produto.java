@@ -63,7 +63,7 @@ public class Produto {
         }
         }
     public double calcularLucro() {
-        return (precodevenda - precoquepaguei) * quantidade;
+        return (precodevenda * quantidade);
     }
     public double calcularLucroUnitario() {
         return precodevenda - precoquepaguei;

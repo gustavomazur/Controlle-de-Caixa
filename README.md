@@ -4,7 +4,7 @@ API para gerenciamento financeiro e controle de estoque de uma loja.
 
 ## Descrição
 
-A **Contadora API** é uma aplicação backend desenvolvida em Java com Spring Boot. Ela permite o cadastro de produtos, controle de estoque, registro de vendas e cálculo de lucros. O projeto é ideal para quem deseja entender como construir uma API RESTful completa com integração a banco de dados e containerização esta em andamento.
+A **Contadora API** é uma aplicação backend desenvolvida em Java com Spring Boot. Ela permite o cadastro de produtos, controle de estoque, registro de vendas e cálculo de lucros. O projeto é ideal para quem deseja entender como construir uma API RESTful completa com integração a banco de dados e containerização.
 
 ## Tecnologias
 

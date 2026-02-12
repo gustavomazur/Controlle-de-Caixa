@@ -45,10 +45,14 @@ public class ProdutoController {
     public void excluirProduto(@PathVariable Long id) {
         respository.deleteById(id);
     }
-    // @http://localhost:8080/produto/lucro-total
     @GetMapping("/lucro-total")
     public double lucroTotal() {
         return service.lucroTotalEstoque();
+    }
+    @GetMapping("/lucro-unitario/{id}")
+    public double lucroUnitario(@PathVariable Long id) {
+        var produt = respository.getReferenceById(id);
+        return produt.calcularLucroUnitario();
     }
     @PostMapping("/{id}/vender/{quantidade}")
     public VendaResumoDTO vender(
