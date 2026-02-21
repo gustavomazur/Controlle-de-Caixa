@@ -4,10 +4,11 @@ import br.com.contadora.contadora_api.dto.DadosAtulizarProdutoDTO;
 import br.com.contadora.contadora_api.dto.DadosCadastrarProdutoDTO;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
 
 @Table(name ="produto")
 @Entity(name = "Produto")
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
+@Data
 public class Produto {
 
     @Id
@@ -28,16 +30,6 @@ public class Produto {
     private double precodevenda;
     private String imagem;
 
-    public Produto(DadosCadastrarProdutoDTO dados) {
-        this.nome = dados.nome();
-        this.descricao = dados.descricao();
-        this.quantidade = dados.quantidade();
-        this.categoria = dados.categoria();
-        this.precoquepaguei = dados.precoquepaguei();
-        this.precodevenda = dados.precovenda();
-        this.imagem = dados.imagem();
-
-    }
 
     public void atualizarInformacoes(@Valid DadosAtulizarProdutoDTO dados) {
         if (dados.nome() != null) {

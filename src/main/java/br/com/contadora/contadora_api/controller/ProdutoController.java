@@ -10,9 +10,12 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import br.com.contadora.contadora_api.model.Produto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import br.com.contadora.contadora_api.repository.ProdutoRepository;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -26,8 +29,15 @@ public class ProdutoController {
     private ProdutoRepository respository;
 
     @PostMapping
-    public void cadastrarProduto(@RequestBody @Valid DadosCadastrarProdutoDTO dados) {
-        respository.save(new Produto(dados));
+    public ResponseEntity<DadosCadastrarProdutoDTO> save(@RequestBody @Valid DadosCadastrarProdutoDTO dados) {
+       var DTOsalvo = service.insert(dados);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(DTOsalvo.id())
+                .toUri();
+
+        return ResponseEntity.created(uri).body(dados);
+
     }
     @GetMapping
     public List<DadosListagemProdutoDTO> listar() {
@@ -45,6 +55,7 @@ public class ProdutoController {
     public void excluirProduto(@PathVariable Long id) {
         respository.deleteById(id);
     }
+
     @GetMapping("/lucro-total")
     public double lucroTotal() {
         return service.lucroTotalEstoque();
@@ -54,12 +65,11 @@ public class ProdutoController {
         var produt = respository.getReferenceById(id);
         return produt.calcularLucroUnitario();
     }
-    @PostMapping("/{id}/vender/{quantidade}")
-    public VendaResumoDTO vender(
-            @PathVariable Long id,
-            @PathVariable int quantidade) {
-
-        return service.vender(id, quantidade);
+    @PostMapping("/vender/{id}")
+    public VendaResumoDTO venderProduto(@PathVariable Long id, @RequestParam int quantidade) {
+        return service.vender(Long.valueOf(id), quantidade);
     }
+
+
 
 }

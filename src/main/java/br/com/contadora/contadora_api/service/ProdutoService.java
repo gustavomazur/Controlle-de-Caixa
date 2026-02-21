@@ -1,7 +1,10 @@
 package br.com.contadora.contadora_api.service;
 
+import br.com.contadora.contadora_api.dto.DadosCadastrarProdutoDTO;
 import br.com.contadora.contadora_api.dto.VendaResumoDTO;
+import br.com.contadora.contadora_api.mapper.ProdutoMapper;
 import br.com.contadora.contadora_api.model.Produto;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import br.com.contadora.contadora_api.repository.ProdutoRepository;
@@ -11,21 +14,20 @@ import java.util.List;
 @Service
 public class ProdutoService {
 
+
     @Autowired
     private ProdutoRepository repository;
+
 
     // ===============================
     // LUCRO TOTAL DO ESTOQUE (POTENCIAL)
     // ===============================
     public double lucroTotalEstoque() {
-
         List<Produto> produtos = repository.findAll();
         double total = 0;
-
         for (Produto p : produtos) {
             total += p.calcularLucro(); // lucro = (venda - custo) * quantidade
         }
-
         return total;
     }
 
@@ -63,11 +65,9 @@ public class ProdutoService {
         return new VendaResumoDTO(
                 p.getNome(),
                 quantidadeVendida,
-
                 custoUnitario,
                 precoVendaUnitario,
                 lucroUnitario,
-
                 custoTotal,
                 valorVendaTotal,
                 lucroTotal
@@ -84,5 +84,16 @@ public class ProdutoService {
 
         return p.calcularLucro();
     }
+
+    @Transactional
+    public DadosCadastrarProdutoDTO insert(DadosCadastrarProdutoDTO dto) {
+
+        Produto novoProduto = ProdutoMapper.paraProduto(dto);
+
+        novoProduto = repository.save(novoProduto);
+
+        return ProdutoMapper.paraDTO(novoProduto);
+    }
+
 }
 

@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 public record DadosCadastrarProdutoDTO(
 
-        @NotBlank
+        Long id, @NotBlank
         String nome,
 
         @NotBlank
@@ -20,7 +20,7 @@ public record DadosCadastrarProdutoDTO(
         double precoquepaguei,
 
         @Positive
-        double precovenda,
+        double precodevenda,
 
         @NotBlank
         String imagem
