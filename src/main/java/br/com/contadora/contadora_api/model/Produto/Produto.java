@@ -15,13 +15,20 @@ import java.math.BigDecimal;
 public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
     private String nome;
+    private Integer quantidade;
     private String categoria;
     private String descricao;
     private BigDecimal precoCompra;
     private BigDecimal precoVenda;
     private String imagem;
-    private String barraProduto;
+    private String barraDoProduto;
 }
+
+
+
+
+
+
+

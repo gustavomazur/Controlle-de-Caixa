@@ -1,0 +1,36 @@
+package br.com.contadora.contadora_api.model.venda;
+
+import br.com.contadora.contadora_api.model.Produto.Produto;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "item_venda")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ItemVenda {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+
+        @ManyToOne
+        @JoinColumn(name = "produto_id")
+        private Produto produto;
+
+        @ManyToOne
+        @JoinColumn(name = "venda_id")
+        private Venda venda;
+
+        private Integer quantidade;
+
+        private BigDecimal preco;
+    }
+
