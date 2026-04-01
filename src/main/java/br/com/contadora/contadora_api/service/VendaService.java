@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,9 +76,9 @@ public class VendaService {
     }
     // historico geral tudo que ja foi vendido
     public List<VendaDTO> listarHisotricoGeral() {
-        return vendaRepository.findAll().stream()
-                .map(VendaMapper::paraDTO)
-                .collect(Collectors.toList());
+        List<VendaDTO> list = new ArrayList<>();
+        vendaRepository.findAll().forEach(venda -> list.add(VendaMapper.paraDTO(venda)));
+        return list;
     }
     // historico do dia
     public List<VendaDTO> listarVendaDeHoje() {
