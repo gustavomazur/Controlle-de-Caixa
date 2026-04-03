@@ -48,7 +48,35 @@ docker-compose up -d
 
 Isso irá baixar a imagem do MySQL e iniciar o container na porta `3306`.
 
-### 3. Rodar a Aplicação
+### 3. Configurar as Credenciais
+
+Antes de executar a aplicação, você precisa configurar as credenciais usando o arquivo `.env`:
+
+```bash
+# Copiar o arquivo de exemplo
+cp .env.example .env
+```
+
+**Edite o arquivo `.env` e configure suas credenciais reais:**
+
+```bash
+# Suas credenciais do Cloudinary
+CLOUDINARY_CLOUD_NAME=da7zpj35m
+CLOUDINARY_API_KEY=sua_api_key_aqui
+CLOUDINARY_API_SECRET=seu_api_secret_aqui
+
+# Suas credenciais do MySQL
+SPRING_DATASOURCE_USERNAME_DEV=seu_usuario_mysql
+SPRING_DATASOURCE_PASSWORD_DEV=sua_senha_mysql
+```
+
+**O arquivo `.env` contém:**
+- ✅ Credenciais do Cloudinary (para upload de imagens)
+- ✅ Credenciais do banco de dados MySQL
+- ✅ Configurações de perfil da aplicação
+- ✅ Configurações JPA/Hibernate
+
+### 4. Executar a Aplicação
 
 Você não precisa ter o Maven instalado globalmente, pois o projeto inclui o Maven Wrapper.
 

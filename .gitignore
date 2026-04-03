@@ -63,3 +63,8 @@ src/main/resources/application*.properties
 !src/main/resources/application.properties.example
 !src/main/resources/application-dev.properties.example
 !src/main/resources/application-docker.properties.example
+
+### Environment Variables ###
+# Arquivo .env com variáveis de ambiente
+.env
+!.env.example
