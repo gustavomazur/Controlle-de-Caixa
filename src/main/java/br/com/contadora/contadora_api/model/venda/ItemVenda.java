@@ -25,12 +25,18 @@ public class ItemVenda {
         @JoinColumn(name = "produto_id")
         private Produto produto;
 
+        private Integer quantidade;
+
+        private BigDecimal precoVendido;
+
+        private BigDecimal lucroDoItem;
+
+        private BigDecimal precoDeCompraNoMomento;
+
         @ManyToOne
         @JoinColumn(name = "venda_id")
         private Venda venda;
 
-        private Integer quantidade;
+        }
 
-        private BigDecimal preco;
-    }
 

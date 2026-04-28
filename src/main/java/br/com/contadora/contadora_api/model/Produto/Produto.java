@@ -20,8 +20,8 @@ public class Produto {
     private Integer quantidade;
     private String categoria;
     private String descricao;
-    private BigDecimal precoCompra;
-    private BigDecimal precoVenda;
+    private BigDecimal precoDeCompra;
+    private BigDecimal precoDeVenda;
 
     @Column(length = 1000)
     private String imagem;

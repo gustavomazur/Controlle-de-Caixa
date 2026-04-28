@@ -1,7 +1,6 @@
 package br.com.contadora.contadora_api.model.venda;
 
 import br.com.contadora.contadora_api.model.Cliente.Cliente;
-import br.com.contadora.contadora_api.model.desconto.Desconto;
 import br.com.contadora.contadora_api.model.tipo.TipoDeVenda;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,11 +32,18 @@ public class Venda {
         @Enumerated(EnumType.STRING)
         private TipoDeVenda tipoPagamento;
 
-        @Enumerated(EnumType.STRING)
-        private Desconto desconto;
+        private BigDecimal desconto;
+
+        private BigDecimal valorTotal;
+
+        private BigDecimal lucroTotal;
 
         @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL)
         private List<ItemVenda> itens;
 
-    }
+
+
+        }
+
+
 

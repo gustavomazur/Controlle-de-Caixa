@@ -1,22 +1,17 @@
 package br.com.contadora.contadora_api.service;
 
-import br.com.contadora.contadora_api.dto.VendaDTO;
-import br.com.contadora.contadora_api.mapper.VendaMapper;
-import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.Produto.Produto;
+import br.com.contadora.contadora_api.model.venda.ItemVenda;
 import br.com.contadora.contadora_api.model.venda.Venda;
 import br.com.contadora.contadora_api.repository.ClienteRepository;
 import br.com.contadora.contadora_api.repository.ProdutoRepository;
 import br.com.contadora.contadora_api.repository.VendaRepository;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class VendaService {
@@ -30,97 +25,90 @@ public class VendaService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    @Transactional
-    public VendaDTO realizarVenda(VendaDTO dto) {
-        // converte dto para entidade usando mapper
-        Venda venda = VendaMapper.paraEntidade(dto);
+    public Venda registrarVenda(Venda venda) {
 
+        // Validações da venda em si
+        if (venda.getItens() == null || venda.getItens().isEmpty()) {
+            throw new IllegalArgumentException("A venda deve ter ao menos um item");
+        }
+        if (venda.getCliente() == null || venda.getCliente().getId() == null) {
+            throw new IllegalArgumentException("Cliente não informado");
+        }
+        if (!clienteRepository.existsById(venda.getCliente().getId())) {
+            throw new EntityNotFoundException("Cliente não encontrado");
+        }
+        if (venda.getVendedor() == null || venda.getVendedor().isBlank()) {
+            throw new IllegalArgumentException("Vendedor não informado");
+        }
+        if (venda.getTipoPagamento() == null) {
+            throw new IllegalArgumentException("Tipo de pagamento não informado");
+        }
+
+        // Inicializa os totais
         venda.setData(LocalDateTime.now());
+        venda.setValorTotal(BigDecimal.ZERO);
+        venda.setLucroTotal(BigDecimal.ZERO);
+        venda.setDesconto(BigDecimal.ZERO);
 
-        //valida o cliente buscando pelo ID se foi informado
-        if (dto.clienteId() != null) {
-            var cliente = clienteRepository.findById(dto.clienteId())
-                    .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-            venda.setCliente(cliente);
-        }
+        for (ItemVenda itemVenda : venda.getItens()) {
 
-        // processa os Itens e Baixa o Estoque
-        venda.getItens().forEach(item -> {
-            //busca o produto real pra pegar o preço atual e o estoque
-            var produto = produtoRepository.findById(item.getProduto().getId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encotrado: ID" + item.getProduto().getId()));
-
-            // olha estoque verifica
-            if (produto.getQuantidade() < item.getQuantidade()) {
-                throw new RuntimeException("Estoque insuficiente para o produto " + produto.getNome());
-
+            // Validações do item
+            if (itemVenda.getProduto() == null || itemVenda.getProduto().getId() == null) {
+                throw new EntityNotFoundException("Produto não informado no item");
             }
 
-            // atualizar estoque
-            produto.setQuantidade(produto.getQuantidade() - item.getQuantidade());
-            produtoRepository.save(produto);
+            Produto produto = produtoRepository.findById(itemVenda.getProduto().getId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Produto não encontrado: " + itemVenda.getProduto().getId()));
 
-            // Garante que o preço no item seja o preço de venda padrão,
-            // SOMENTE se o vendedor não enviou um preço customizado (com desconto) no JSON.
-            if (item.getPreco() == null) {
-                item.setPreco(produto.getPrecoVenda());
+            if (itemVenda.getQuantidade() == null || itemVenda.getQuantidade() <= 0) {
+                throw new IllegalArgumentException("Quantidade inválida para: " + produto.getNome());
+            }
+            if (itemVenda.getQuantidade() > produto.getQuantidade()) {
+                throw new IllegalArgumentException("Estoque insuficiente para: " + produto.getNome());
+            }
+            if (itemVenda.getPrecoVendido() == null) {
+                throw new IllegalArgumentException("Preço vendido não informado para: " + produto.getNome());
             }
 
-        });
-        // salvar a venda
-        Venda vendaSalva = vendaRepository.save(venda);
+            // Congela o preço de compra no momento da venda
+            itemVenda.setPrecoDeCompraNoMomento(produto.getPrecoDeCompra());
 
-        // retorna dto para o front
-        return VendaMapper.paraDTO(vendaSalva);
+            BigDecimal quantidade = BigDecimal.valueOf(itemVenda.getQuantidade());
 
-    }
-    // historico geral tudo que ja foi vendido
-    public List<VendaDTO> listarHisotricoGeral() {
-        List<VendaDTO> list = new ArrayList<>();
-        vendaRepository.findAll().forEach(venda -> list.add(VendaMapper.paraDTO(venda)));
-        return list;
-    }
-    // historico do dia
-    public List<VendaDTO> listarVendaDeHoje() {
-        LocalDateTime inicioDoDia = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime fimDoDia = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+            // Lucro do item: (precoVendido - precoDeCompraNoMomento) * quantidade
+            BigDecimal lucroItem = itemVenda.getPrecoVendido()
+                    .subtract(itemVenda.getPrecoDeCompraNoMomento())
+                    .multiply(quantidade);
 
-        return vendaRepository.findByDataBetween(inicioDoDia, fimDoDia).stream()
-                .map(VendaMapper::paraDTO)
-                .collect(Collectors.toList());
-    }
+            // Desconto: diferença entre preço padrão e preço vendido * quantidade
+            // positivo = deu desconto, negativo = vendeu acima do preço
+            BigDecimal descontoItem = produto.getPrecoDeVenda()
+                    .subtract(itemVenda.getPrecoVendido())
+                    .multiply(quantidade);
 
-    // historico oque cliente ja comprou
-    public List<VendaDTO> buscarVendasPorCliente(Long clienteId) {
-        return vendaRepository.findByClienteId(clienteId).stream()
-                .map(VendaMapper::paraDTO)
-                .collect(Collectors.toList());
+            // Valor que entrou no caixa por esse item
+            BigDecimal valorItem = itemVenda.getPrecoVendido().multiply(quantidade);
 
-    }
-    public BigDecimal calcularLucroDoDia() {
-        LocalDateTime inicio = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime fim = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+            // Seta os dados no item
+            itemVenda.setLucroDoItem(lucroItem);
+            itemVenda.setVenda(venda);
 
-        List<Venda> vendasDeHoje = vendaRepository.findByDataBetween(inicio, fim);
+            // Acumula os totais na venda
+            venda.setValorTotal(venda.getValorTotal().add(valorItem));
+            venda.setLucroTotal(venda.getLucroTotal().add(lucroItem));
+            venda.setDesconto(venda.getDesconto().add(descontoItem));
 
-        BigDecimal lucroTotal = BigDecimal.ZERO;
+            // Atualiza o estoque
+            produto.setQuantidade(produto.getQuantidade() - itemVenda.getQuantidade());
 
-        for (Venda venda : vendasDeHoje) {
-            for (var item : venda.getItens()) {
-                BigDecimal precoCompra = item.getProduto().getPrecoCompra();
-                BigDecimal precoVendaNoMomento = item.getPreco(); // Preço que foi vendido
-                Integer qtd = item.getQuantidade();
-
-                // Lucro por item = (Venda - Compra) * Quantidade
-                BigDecimal lucroItem = precoVendaNoMomento.subtract(precoCompra)
-                        .multiply(new BigDecimal(qtd));
-
-                lucroTotal = lucroTotal.add(lucroItem);
+            if (produto.getQuantidade() == 0) {
+                produtoRepository.delete(produto);
+            } else {
+                produtoRepository.save(produto);
             }
         }
-        return lucroTotal;
+
+        return vendaRepository.save(venda);
     }
-
-
-
 }
