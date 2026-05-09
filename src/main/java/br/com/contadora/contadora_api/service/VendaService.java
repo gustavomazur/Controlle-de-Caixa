@@ -1,8 +1,10 @@
 package br.com.contadora.contadora_api.service;
 
 import br.com.contadora.contadora_api.model.Produto.Produto;
+import br.com.contadora.contadora_api.model.caixa.Caixa;
 import br.com.contadora.contadora_api.model.venda.ItemVenda;
 import br.com.contadora.contadora_api.model.venda.Venda;
+import br.com.contadora.contadora_api.repository.CaixaRepository;
 import br.com.contadora.contadora_api.repository.ClienteRepository;
 import br.com.contadora.contadora_api.repository.ProdutoRepository;
 import br.com.contadora.contadora_api.repository.VendaRepository;
@@ -24,6 +26,9 @@ public class VendaService {
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private CaixaRepository caixaRepository;
 
     public Venda registrarVenda(Venda venda) {
 
@@ -108,6 +113,12 @@ public class VendaService {
                 produtoRepository.save(produto);
             }
         }
+        Caixa caixa = caixaRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado"));
+
+        // Adiciona o valorTotal da venda ao saldo do caixa
+        caixa.setSaldo(caixa.getSaldo().add(venda.getValorTotal()));
+        caixaRepository.save(caixa);
 
         return vendaRepository.save(venda);
     }
