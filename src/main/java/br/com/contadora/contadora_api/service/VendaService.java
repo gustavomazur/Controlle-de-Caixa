@@ -1,5 +1,11 @@
 package br.com.contadora.contadora_api.service;
 
+import br.com.contadora.contadora_api.dto.ItemVendaRequest;
+import br.com.contadora.contadora_api.dto.VendaDTO;
+import br.com.contadora.contadora_api.dto.VendaRequest;
+import br.com.contadora.contadora_api.mapper.ItemVendaMapper;
+import br.com.contadora.contadora_api.mapper.VendaMapper;
+import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.Produto.Produto;
 import br.com.contadora.contadora_api.model.caixa.Caixa;
 import br.com.contadora.contadora_api.model.venda.ItemVenda;
@@ -14,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 public class VendaService {
@@ -30,82 +37,81 @@ public class VendaService {
     @Autowired
     private CaixaRepository caixaRepository;
 
-    public Venda registrarVenda(Venda venda) {
+    @Autowired
+    private VendaMapper vendaMapper;
 
-        // Validações da venda em si
-        if (venda.getItens() == null || venda.getItens().isEmpty()) {
-            throw new IllegalArgumentException("A venda deve ter ao menos um item");
-        }
-        if (venda.getCliente() == null || venda.getCliente().getId() == null) {
-            throw new IllegalArgumentException("Cliente não informado");
-        }
-        if (!clienteRepository.existsById(venda.getCliente().getId())) {
-            throw new EntityNotFoundException("Cliente não encontrado");
-        }
-        if (venda.getVendedor() == null || venda.getVendedor().isBlank()) {
-            throw new IllegalArgumentException("Vendedor não informado");
-        }
-        if (venda.getTipoPagamento() == null) {
-            throw new IllegalArgumentException("Tipo de pagamento não informado");
-        }
+    @Autowired
+    private ItemVendaMapper itemVendaMapper;
 
-        // Inicializa os totais
+    public VendaDTO registrarVenda(VendaRequest request) {
+
+        if (request.itens() == null || request.itens().isEmpty()) {
+            throw new IllegalArgumentException("Venda deve conter pelo menos um item");
+        }
+        if (request.clienteNome() == null || request.clienteNome().isBlank()) {
+            throw new IllegalArgumentException("Cliente deve ter um nome");
+        }
+        if (request.vendedor() == null || request.vendedor().isBlank()) {
+            throw new IllegalArgumentException("Vendedor deve ser informado");
+        }
+        if (request.tipoPagamento() == null) {
+            throw new IllegalArgumentException("Tipo de pagamento deve ser informado");
+        }
+        Venda venda = vendaMapper.paraEntidade(request);
+
+        Cliente cliente = clienteRepository.findByNome(request.clienteNome())
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
+
+
+        venda.setCliente(cliente);
         venda.setData(LocalDateTime.now());
         venda.setValorTotal(BigDecimal.ZERO);
         venda.setLucroTotal(BigDecimal.ZERO);
         venda.setDesconto(BigDecimal.ZERO);
+        venda.setItens(new ArrayList<>());
 
-        for (ItemVenda itemVenda : venda.getItens()) {
+        for (ItemVendaRequest itemRequest : request.itens()) {
 
-            // Validações do item
-            if (itemVenda.getProduto() == null || itemVenda.getProduto().getId() == null) {
-                throw new EntityNotFoundException("Produto não informado no item");
+            Produto produto = buscarProduto(itemRequest);
+
+            if (itemRequest.quantidade() == null || itemRequest.quantidade() <= 0) {
+                throw new IllegalArgumentException("Quantidade iválida para" + produto.getNome());
+            }
+            if (itemRequest.quantidade() > produto.getQuantidade()) {
+                throw new IllegalArgumentException("Estoque insuficiente " + produto.getNome());
+            }
+            //precoVendido == null
+            if (itemRequest.precoVendido() == null ) {
+                throw new IllegalArgumentException("Preço vendido não informado para " + produto.getNome());
             }
 
-            Produto produto = produtoRepository.findById(itemVenda.getProduto().getId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Produto não encontrado: " + itemVenda.getProduto().getId()));
+            BigDecimal quantidade = BigDecimal.valueOf(itemRequest.quantidade());
+            BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra();
 
-            if (itemVenda.getQuantidade() == null || itemVenda.getQuantidade() <= 0) {
-                throw new IllegalArgumentException("Quantidade inválida para: " + produto.getNome());
-            }
-            if (itemVenda.getQuantidade() > produto.getQuantidade()) {
-                throw new IllegalArgumentException("Estoque insuficiente para: " + produto.getNome());
-            }
-            if (itemVenda.getPrecoVendido() == null) {
-                throw new IllegalArgumentException("Preço vendido não informado para: " + produto.getNome());
-            }
-
-            // Congela o preço de compra no momento da venda
-            itemVenda.setPrecoDeCompraNoMomento(produto.getPrecoDeCompra());
-
-            BigDecimal quantidade = BigDecimal.valueOf(itemVenda.getQuantidade());
-
-            // Lucro do item: (precoVendido - precoDeCompraNoMomento) * quantidade
-            BigDecimal lucroItem = itemVenda.getPrecoVendido()
-                    .subtract(itemVenda.getPrecoDeCompraNoMomento())
+            BigDecimal lucroDoItem = produto.getPrecoDeCompra()
+                    .subtract(precoDeCompraNoMomento)
                     .multiply(quantidade);
 
-            // Desconto: diferença entre preço padrão e preço vendido * quantidade
-            // positivo = deu desconto, negativo = vendeu acima do preço
-            BigDecimal descontoItem = produto.getPrecoDeVenda()
-                    .subtract(itemVenda.getPrecoVendido())
+            BigDecimal descontoItem = produto.getPrecoDeCompra()
+                    .subtract(itemRequest.precoVendido())
                     .multiply(quantidade);
 
-            // Valor que entrou no caixa por esse item
-            BigDecimal valorItem = itemVenda.getPrecoVendido().multiply(quantidade);
+            BigDecimal valorTotalItem = itemRequest.precoVendido().multiply(quantidade);
 
-            // Seta os dados no item
-            itemVenda.setLucroDoItem(lucroItem);
+            ItemVenda itemVenda = new ItemVenda();
+            itemVenda.setProduto(produto);
+            itemVenda.setQuantidade(itemRequest.quantidade());
+            itemVenda.setPrecoVendido(itemRequest.precoVendido());
+            itemVenda.setPrecoDeCompraNoMomento(precoDeCompraNoMomento);
+            itemVenda.setLucroDoItem(lucroDoItem);
             itemVenda.setVenda(venda);
 
-            // Acumula os totais na venda
-            venda.setValorTotal(venda.getValorTotal().add(valorItem));
-            venda.setLucroTotal(venda.getLucroTotal().add(lucroItem));
+            venda.setValorTotal(venda.getValorTotal().add(valorTotalItem));
+            venda.setLucroTotal(venda.getLucroTotal().add(lucroDoItem));
             venda.setDesconto(venda.getDesconto().add(descontoItem));
+            venda.getItens().add(itemVenda);
 
-            // Atualiza o estoque
-            produto.setQuantidade(produto.getQuantidade() - itemVenda.getQuantidade());
+            produto.setQuantidade(produto.getQuantidade() - itemRequest.quantidade());
 
             if (produto.getQuantidade() == 0) {
                 produtoRepository.delete(produto);
@@ -113,13 +119,29 @@ public class VendaService {
                 produtoRepository.save(produto);
             }
         }
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado"));
 
-        // Adiciona o valorTotal da venda ao saldo do caixa
+        Caixa caixa = caixaRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Caixa não encotrando"));
+
         caixa.setSaldo(caixa.getSaldo().add(venda.getValorTotal()));
         caixaRepository.save(caixa);
 
-        return vendaRepository.save(venda);
+        Venda vendaSalva = vendaRepository.save(venda);
+
+
+        return vendaMapper.paraDTO(vendaSalva);
+    }
+    private Produto buscarProduto(ItemVendaRequest itemRequest) {
+        if (itemRequest.produtoNome() != null && !itemRequest.produtoNome().isBlank()) {
+            return produtoRepository.findByNome(itemRequest.produtoNome())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Produto não encontrado pelo nome: " + itemRequest.produtoNome()));
+        }
+        if (itemRequest.barraDoProduto() != null && !itemRequest.barraDoProduto().isBlank()) {
+            return produtoRepository.findByBarraDoProduto(itemRequest.barraDoProduto())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Produto não encontrado pela barra: " + itemRequest.barraDoProduto()));
+        }
+        throw new IllegalArgumentException("Informe o nome ou a barra do produto");
     }
 }

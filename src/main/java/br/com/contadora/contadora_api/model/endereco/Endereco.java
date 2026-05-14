@@ -11,12 +11,19 @@ import lombok.*;
 @EqualsAndHashCode(of = "id")
 @Data
 public class Endereco {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String nome;
+    @Column(nullable = false)
     private String cep;
+    @Column(nullable = false)
     private String rua;
+    @Column(nullable = false)
     private String numero;
+    @Column(nullable = false)
     private String referecncia;
 }

@@ -16,15 +16,20 @@ public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, unique = true)
     private String nome;
+    @Column(nullable = false, unique = true)
     private String telefone;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_cliente")
-    private List<Endereco> enderecos;
+    @Column(nullable = false, unique = true)
     private String cpf;
+    @Column(nullable = false)
     private String tamanho;
 
     @Column(length = 1000)
     private String foto;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_cliente")
+    private List<Endereco> enderecos;
 
 }

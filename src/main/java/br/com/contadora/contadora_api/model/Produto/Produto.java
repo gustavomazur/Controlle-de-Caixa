@@ -16,6 +16,8 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String nome;
     private Integer quantidade;
     private String categoria;
@@ -23,9 +25,12 @@ public class Produto {
     private BigDecimal precoDeCompra;
     private BigDecimal precoDeVenda;
 
+    @Column(nullable = false, unique = true)
+    private String barraDoProduto;
+
     @Column(length = 1000)
     private String imagem;
-    private String barraDoProduto;
+
 }
 
 

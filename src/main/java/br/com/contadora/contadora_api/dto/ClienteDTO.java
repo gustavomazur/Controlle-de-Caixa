@@ -7,9 +7,9 @@ public record ClienteDTO(
         Long id,
         String nome,
         String telefone,
-        List<Endereco> endereco,
         String cpf,
         String tamanho,
-        String foto
+        String foto,
+        List<Endereco> endereco
 ) {
 }

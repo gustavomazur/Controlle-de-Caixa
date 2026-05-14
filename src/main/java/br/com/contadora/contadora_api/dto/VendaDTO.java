@@ -9,7 +9,6 @@ import java.util.List;
 public record VendaDTO(
         Long id,
         LocalDateTime data,
-        Long clienteId,
         String clienteNome,
         String vendedor,
         TipoDeVenda tipoPagamento,

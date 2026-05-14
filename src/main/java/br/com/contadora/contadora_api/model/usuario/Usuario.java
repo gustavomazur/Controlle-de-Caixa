@@ -2,14 +2,17 @@ package br.com.contadora.contadora_api.model.usuario;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Entity
+@Table(name = "usuario")
+@Entity(name = "Usuario")
 @Getter
 @Setter
-@Table(name = "usuario")
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class Usuario {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

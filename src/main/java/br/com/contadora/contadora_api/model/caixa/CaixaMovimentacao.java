@@ -9,8 +9,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
 @Table(name = "caixa_movimentacao")
+@Entity(name = "CaixaMovimentacao")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,6 +28,7 @@ public class CaixaMovimentacao {
     private String descricao;
 
     private LocalDateTime dataHora;
+
     @ManyToOne
     private Caixa caixa;
 

@@ -21,18 +21,24 @@ public class ItemVenda {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
+        @Column(nullable = false)
         @ManyToOne
         @JoinColumn(name = "produto_id")
         private Produto produto;
 
+        @Column(nullable = false)
         private Integer quantidade;
 
+        @Column(nullable = false)
         private BigDecimal precoVendido;
 
+        @Column(nullable = false)
         private BigDecimal lucroDoItem;
 
+        @Column(nullable = false)
         private BigDecimal precoDeCompraNoMomento;
 
+        @Column(nullable = false)
         @ManyToOne
         @JoinColumn(name = "venda_id")
         private Venda venda;

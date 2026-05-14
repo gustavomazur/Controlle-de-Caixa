@@ -8,10 +8,9 @@ public record ProdutoDTO(
         Integer quantidade,
         String categoria,
         String descricao,
-        BigDecimal precoCompra,
-        BigDecimal precoVenda,
-        String imagem,
-        String barraDoProduto
-
+        BigDecimal precoDeCompra,
+        BigDecimal precoDeVenda,
+        String barraDoProduto,
+        String imagem
 ) {
 }
