@@ -88,11 +88,11 @@ public class VendaService {
             BigDecimal quantidade = BigDecimal.valueOf(itemRequest.quantidade());
             BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra();
 
-            BigDecimal lucroDoItem = produto.getPrecoDeCompra()
+            BigDecimal lucroDoItem = itemRequest.precoVendido()
                     .subtract(precoDeCompraNoMomento)
                     .multiply(quantidade);
 
-            BigDecimal descontoItem = produto.getPrecoDeCompra()
+            BigDecimal descontoItem = produto.getPrecoDeVenda()
                     .subtract(itemRequest.precoVendido())
                     .multiply(quantidade);
 

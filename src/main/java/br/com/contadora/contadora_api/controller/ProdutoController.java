@@ -2,6 +2,7 @@ package br.com.contadora.contadora_api.controller;
 
 import br.com.contadora.contadora_api.dto.ClienteDTO;
 import br.com.contadora.contadora_api.dto.ProdutoDTO;
+import br.com.contadora.contadora_api.dto.ProdutoRequest;
 import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.Produto.Produto;
 import br.com.contadora.contadora_api.service.ClienteService;
@@ -28,45 +29,20 @@ public class ProdutoController {
         this.service = service;
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProdutoDTO>> listarTodos() {
-        List<ProdutoDTO> produtos = service.listarTodos();
-        return ResponseEntity.ok(produtos);
+    @PostMapping
+    public ResponseEntity<ProdutoDTO> cadastrar(@Valid @RequestBody ProdutoRequest DTO) {
+        ProdutoDTO produto = service.cadastrar(DTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(produto);
     }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ProdutoDTO> buscaPorId(@PathVariable Long id) {
-        ProdutoDTO produto = service.findById(id);
+    @PutMapping
+    public ResponseEntity<ProdutoDTO> atualizar(@Valid @RequestBody ProdutoRequest DTO) {
+        ProdutoDTO produto = service.atulizar(DTO);
+        return ResponseEntity.ok(produto);
+    }
+    @DeleteMapping
+    public ResponseEntity<ProdutoDTO> deletar(@Valid @RequestBody ProdutoRequest DTO) {
+        ProdutoDTO produto = service.deletar(DTO);
         return ResponseEntity.ok(produto);
     }
 
-    @GetMapping("/nome/{nome}")
-    public ResponseEntity<ProdutoDTO> buscarPorNome(@PathVariable String nome) {
-        ProdutoDTO produto = service.findByNome(nome);
-        return ResponseEntity.ok(produto);
-    }
-
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<Void> criar(@RequestPart("produto") @Valid ProdutoDTO produtoDTO,
-                                      @RequestPart("arquivo") MultipartFile arquivo) throws IOException {
-
-        var produtoSalva = service.insert(produtoDTO, arquivo);
-
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(produtoSalva.id()).toUri();
-        return ResponseEntity.created(uri).build();
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> atualizar(@PathVariable Long id, @RequestBody Produto produto) {
-        produto.setId(id);
-        service.atualizaProduto(produto);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
 }

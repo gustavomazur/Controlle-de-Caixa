@@ -2,14 +2,17 @@ package br.com.contadora.contadora_api.controller;
 
 
 import br.com.contadora.contadora_api.dto.VendaDTO;
-import br.com.contadora.contadora_api.model.venda.Venda;
+import br.com.contadora.contadora_api.dto.VendaRequest;
 import br.com.contadora.contadora_api.service.VendaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/venda")
+@RequestMapping("/vendas")
 
 public class VendaController {
 
@@ -19,12 +22,9 @@ public class VendaController {
         this.vendaService = vendaService;
     }
     @PostMapping
-    public ResponseEntity<Venda> registrarVenda(@RequestBody VendaDTO DTO) {
-        vendaService.registrarVenda(DTO);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<VendaDTO> registrarVenda(@RequestBody VendaRequest DTO) {
+        return ResponseEntity.ok(vendaService.registrarVenda(DTO));
     }
-
-
 
 }
 
