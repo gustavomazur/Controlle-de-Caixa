@@ -58,6 +58,6 @@ hs_err_pid*
 replay_pid*
 
 ### Environment Variables ###
-# Arquivo .env com variáveis de ambiente
-.env
-!.env.example
+# Arquivo .env.local com variáveis de ambiente
+envs/.env.local
+!envs/.env.example

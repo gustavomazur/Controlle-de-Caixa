@@ -21,6 +21,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ClienteController {
 
+    //mecher
     private final ClienteService service;
     private final ObjectMapper objectMapper;
 

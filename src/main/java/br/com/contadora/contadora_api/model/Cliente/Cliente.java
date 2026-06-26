@@ -30,6 +30,6 @@ public class Cliente {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_cliente")
-    private List<Endereco> enderecos;
+    private List<Endereco> endereco;
 
 }
