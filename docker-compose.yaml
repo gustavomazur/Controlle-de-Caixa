@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
 
     env_file:
-      - envs/.env.local.local
+      - envs/.env.local
     ports:
       - "${DB_PORT}:5432"
     environment:
