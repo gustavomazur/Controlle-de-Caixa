@@ -16,6 +16,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class CaixaController {
 
+    //analisar
     private final CaixaService service;
 
     public CaixaController(CaixaService service) {

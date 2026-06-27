@@ -50,7 +50,7 @@ Baixe o MySQL em https://dev.mysql.com/downloads/mysql/ e siga o instalador.
 
 Copie o arquivo de exemplo:
 ```bash
-cp .env.example .env
+cp .env.local.example .env.local
 ```
 
 Edite o `.env` com suas configurações:

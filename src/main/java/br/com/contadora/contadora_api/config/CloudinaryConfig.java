@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuração do Cloudinary para upload de imagens
- * As credenciais devem ser definidas no arquivo .env
+ * As credenciais devem ser definidas no arquivo .env.local
  */
 @Configuration
 public class CloudinaryConfig {
