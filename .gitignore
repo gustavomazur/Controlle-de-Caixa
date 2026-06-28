@@ -65,5 +65,3 @@ envs/.env.local
 # Arquivo de variáveis de ambiente local
 .env.local
 
-# Configuração da aplicação
-application.properties
