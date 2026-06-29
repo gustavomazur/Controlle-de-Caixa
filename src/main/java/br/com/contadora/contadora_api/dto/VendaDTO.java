@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record VendaDTO(
-        Long id,
         LocalDateTime data,
         String clienteNome,
         String vendedor,

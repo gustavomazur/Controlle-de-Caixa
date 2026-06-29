@@ -14,10 +14,8 @@ import java.math.BigDecimal;
 @Service
 public class ProdutoService {
 
-    //criar
-    //atulizar
     //listar
-    //deletar
+
 
     @Autowired
     private ProdutoRepository produtoRepository;
