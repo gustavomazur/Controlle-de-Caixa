@@ -36,12 +36,6 @@ public class ClienteController {
         return ResponseEntity.ok(clientes);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ClienteDTO> buscaPorId(@PathVariable Long id) {
-        ClienteDTO cliente = service.findById(id);
-        return ResponseEntity.ok(cliente);
-    }
-
     @GetMapping("/nome/{nome}")
     public ResponseEntity<ClienteDTO> buscarPorNome(@PathVariable String nome) {
         ClienteDTO cliente = service.findByNome(nome);

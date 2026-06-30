@@ -23,7 +23,7 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ProdutoController {
 
-    //mecher
+
     private final ProdutoService service;
 
     public ProdutoController(ProdutoService service) {
@@ -37,7 +37,7 @@ public class ProdutoController {
     }
     @PutMapping
     public ResponseEntity<ProdutoDTO> atualizar(@Valid @RequestBody ProdutoRequest DTO) {
-        ProdutoDTO produto = service.atulizar(DTO);
+        ProdutoDTO produto = service.atualizar(DTO);
         return ResponseEntity.ok(produto);
     }
     @DeleteMapping
@@ -45,5 +45,9 @@ public class ProdutoController {
         ProdutoDTO produto = service.deletar(DTO);
         return ResponseEntity.ok(produto);
     }
+    /*Listar todos os produtos
+     listar/produtos/categoria
+     procura/produto/nome
+     */
 
 }
