@@ -20,7 +20,6 @@ public class Produto {
     @Column(nullable = false, unique = true)
     private String nome;
     private Integer quantidade;
-    private String categoria;
     private String descricao;
     private BigDecimal precoDeCompra;
     private BigDecimal precoDeVenda;
@@ -28,9 +27,9 @@ public class Produto {
     @Column(nullable = false, unique = true)
     private String barraDoProduto;
 
-    @Column(length = 1000)
-    private String imagem;
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_nome", nullable = false)
+    private Categoria categoria;
 }
 
 

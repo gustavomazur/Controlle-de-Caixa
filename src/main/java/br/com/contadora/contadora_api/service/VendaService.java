@@ -59,7 +59,7 @@ public class VendaService {
         }
         Venda venda = vendaMapper.paraEntidade(request);
 
-        Cliente cliente = clienteRepository.findByNome(request.clienteNome())
+        Cliente cliente = clienteRepository.findByNomeIgnoreCase(request.clienteNome())
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
 
 
@@ -67,7 +67,7 @@ public class VendaService {
         venda.setData(LocalDateTime.now());
         venda.setValorTotal(BigDecimal.ZERO);
         venda.setLucroTotal(BigDecimal.ZERO);
-        venda.setDesconto(BigDecimal.ZERO);
+        venda.setDesconto(request.desconto() != null ? request.desconto() : BigDecimal.ZERO);
         venda.setItens(new ArrayList<>());
 
         for (ItemVendaRequest itemRequest : request.itens()) {
@@ -86,13 +86,17 @@ public class VendaService {
             }
 
             BigDecimal quantidade = BigDecimal.valueOf(itemRequest.quantidade());
-            BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra();
+            BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra() != null
+                    ? produto.getPrecoDeCompra() : BigDecimal.ZERO;
 
             BigDecimal lucroDoItem = itemRequest.precoVendido()
                     .subtract(precoDeCompraNoMomento)
                     .multiply(quantidade);
 
-            BigDecimal descontoItem = produto.getPrecoDeVenda()
+            BigDecimal precoDeVenda = produto.getPrecoDeVenda() != null
+                    ? produto.getPrecoDeVenda() : BigDecimal.ZERO;
+
+            BigDecimal descontoItem = precoDeVenda
                     .subtract(itemRequest.precoVendido())
                     .multiply(quantidade);
 
@@ -120,8 +124,11 @@ public class VendaService {
             }
         }
 
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encotrando"));
+        Caixa caixa = caixaRepository.findById(1L).orElseGet(() -> {
+            Caixa novo = new Caixa();
+            novo.setSaldo(BigDecimal.ZERO);
+            return caixaRepository.save(novo);
+        });
 
         caixa.setSaldo(caixa.getSaldo().add(venda.getValorTotal()));
         caixaRepository.save(caixa);

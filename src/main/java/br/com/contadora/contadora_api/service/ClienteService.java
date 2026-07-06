@@ -1,20 +1,18 @@
 package br.com.contadora.contadora_api.service;
 
 import br.com.contadora.contadora_api.dto.ClienteDTO;
+import br.com.contadora.contadora_api.dto.EnderecoDTO;
 import br.com.contadora.contadora_api.mapper.ClienteMapper;
+import br.com.contadora.contadora_api.mapper.EnderecoMapper;
 import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.endereco.Endereco;
 import br.com.contadora.contadora_api.repository.ClienteRepository;
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -22,84 +20,76 @@ import java.util.stream.Collectors;
 public class ClienteService {
 
     private final ClienteRepository repository;
-    private final Cloudinary cloudinary;
     private final ClienteMapper mapper;
+    private final EnderecoMapper enderecoMapper;
 
-    public ClienteService(ClienteRepository repository, Cloudinary cloudinary, ClienteMapper mapper) {
+    public ClienteService(ClienteRepository repository, ClienteMapper mapper, EnderecoMapper enderecoMapper) {
         this.repository = repository;
-        this.cloudinary = cloudinary;
         this.mapper = mapper;
+        this.enderecoMapper = enderecoMapper;
     }
 
     public ClienteDTO findByNome(String nome) {
-        Cliente cliente = repository.findByNome(nome)
+        Cliente cliente = repository.findByNomeIgnoreCase(nome)
                 .orElseThrow(() -> new RuntimeException("Usuário " + nome + " não encontrado"));
         return mapper.paraDTO(cliente);
     }
 
-    public ClienteDTO insert(@Valid ClienteDTO clienteDTO, MultipartFile arquivo) throws IOException {
-
-        String urlFoto = null;
-
-        // Fazer upload da foto se fornecida
-        if (arquivo != null && !arquivo.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> uploadResult = cloudinary.uploader()
-                    .upload(arquivo.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
-            urlFoto = (String) uploadResult.get("secure_url");
-        }
-
-        // Criar cliente e salvar
+    public ClienteDTO insert(@Valid ClienteDTO clienteDTO) {
         Cliente novoCliente = mapper.paraEntidade(clienteDTO);
-        novoCliente.setFoto(urlFoto);
         novoCliente.setId(null);
         novoCliente = repository.save(novoCliente);
-        
         return mapper.paraDTO(novoCliente);
     }
 
-    /**
-     * Adicionar endereços a um cliente existente
-     * @param clienteId ID do cliente
-     * @param enderecos Lista de endereços a adicionar
-     * @return ClienteDTO atualizado
-     */
-    public ClienteDTO adicionarEnderecos(Long clienteId, List<Endereco> enderecos) {
+    public ClienteDTO criarEndereco(Long clienteId, EnderecoDTO dto) {
         Cliente cliente = repository.findById(clienteId)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado com ID: " + clienteId));
 
-        if (cliente.getEndereco() == null) {
-            cliente.setEndereco(enderecos);
-        } else {
-            cliente.getEndereco().addAll(enderecos);
+        if (cliente.getEndereco() != null && !cliente.getEndereco().isEmpty()) {
+            throw new IllegalArgumentException("Cliente já possui endereço cadastrado. Utilize o endpoint de atualização.");
         }
+
+        Endereco endereco = enderecoMapper.paraEntidade(dto);
+
+        List<Endereco> enderecos = new ArrayList<>();
+        enderecos.add(endereco);
+        cliente.setEndereco(enderecos);
 
         cliente = repository.save(cliente);
         return mapper.paraDTO(cliente);
     }
 
-    public void atualizaCliente(Cliente cliente) {
-        if (!repository.existsById(cliente.getId().longValue())) {
-            throw new EntityNotFoundException("Cliente não encontrado para atualizar");
-        }
-        repository.save(cliente);
-    }
+    public ClienteDTO atualizarEndereco(Long clienteId, Long enderecoId, EnderecoDTO dto) {
+        Cliente cliente = repository.findById(clienteId)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado com ID: " + clienteId));
 
-    /**
-     * Atualizar cliente existente
-     * @param id ID do cliente
-     * @param clienteDTO Dados atualizados
-     * @return ClienteDTO atualizado
-     */
-    public ClienteDTO atualizar(Long id, ClienteDTO clienteDTO) {
+        if (cliente.getEndereco() == null || cliente.getEndereco().isEmpty()) {
+            throw new IllegalArgumentException("Cliente não possui endereço cadastrado. Utilize o endpoint de criação.");
+        }
+
+        Endereco endereco = cliente.getEndereco().stream()
+                .filter(e -> e.getId().equals(enderecoId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Endereço não encontrado com ID: " + enderecoId));
+
+        endereco.setNome(dto.nome());
+        endereco.setCep(dto.cep());
+        endereco.setRua(dto.rua());
+        endereco.setNumero(dto.numero());
+        endereco.setReferecncia(dto.referencia());
+
+        cliente = repository.save(cliente);
+        return mapper.paraDTO(cliente);
+
+    }
+    public ClienteDTO atualizarCliente(Long id, ClienteDTO clienteDTO) {
         Cliente cliente = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado com ID: " + id));
 
         if (clienteDTO.nome() != null) cliente.setNome(clienteDTO.nome());
         if (clienteDTO.telefone() != null) cliente.setTelefone(clienteDTO.telefone());
         if (clienteDTO.cpf() != null) cliente.setCpf(clienteDTO.cpf());
-        if (clienteDTO.tamanho() != null) cliente.setTamanho(clienteDTO.tamanho());
-        if (clienteDTO.endereco() != null) cliente.setEndereco(clienteDTO.endereco());
 
         cliente = repository.save(cliente);
         return mapper.paraDTO(cliente);

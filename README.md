@@ -68,7 +68,12 @@ Isso ativa a validação de mensagens de commit (Conventional Commits) e verific
 ## Rodar o projeto
 
 ```bash
-docker-compose up -d
+Subir local:  docker compose --env-file envs/.env.local up
+alteração no projeto rode esse comando: docker compose --env-file envs/.env.local up -d --build app
+
+
+## Para ver as loc da API
+URL: http://localhost:8080/swagger-ui/index.html
 ```
 
 Isso sobe o PostgreSQL e a aplicação. A aplicação ficará disponível em `http://localhost:8080`.
@@ -90,7 +95,7 @@ Isso sobe o PostgreSQL e a aplicação. A aplicação ficará disponível em `ht
 | GET | `/api/clientes` | Listar todos os clientes |
 | GET | `/api/clientes/{id}` | Buscar cliente por ID |
 | GET | `/api/clientes/nome/{nome}` | Buscar cliente por nome |
-| POST | `/api/clientes` | Cadastrar cliente (multipart/form-data) |
+| POST | `/api/clientes` | Cadastrar cliente (application/json) |
 | PUT | `/api/clientes/{id}` | Atualizar cliente |
 | DELETE | `/api/clientes/{id}` | Deletar cliente |
 
