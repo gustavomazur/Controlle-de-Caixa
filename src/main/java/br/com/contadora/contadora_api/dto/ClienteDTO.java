@@ -8,8 +8,6 @@ public record ClienteDTO(
         String nome,
         String telefone,
         String cpf,
-        String tamanho,
-        String foto,
         List<Endereco> endereco
 ) {
 }

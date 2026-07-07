@@ -15,10 +15,8 @@ public interface VendaMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", ignore = true)
-    @Mapping(target = "itens", ignore = true)
     @Mapping(target = "valorTotal", ignore = true)
     @Mapping(target = "lucroTotal", ignore = true)
-    @Mapping(target = "desconto", ignore = true)
     @Mapping(target = "data", ignore = true)
     Venda paraEntidade(VendaRequest request);
 }

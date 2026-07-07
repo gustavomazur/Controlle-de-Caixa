@@ -1,18 +1,13 @@
 package br.com.contadora.contadora_api.controller;
 
 import br.com.contadora.contadora_api.dto.ClienteDTO;
-import br.com.contadora.contadora_api.model.Cliente.Cliente;
-import br.com.contadora.contadora_api.model.endereco.Endereco;
+import br.com.contadora.contadora_api.dto.EnderecoDTO;
 import br.com.contadora.contadora_api.service.ClienteService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -21,13 +16,11 @@ import java.util.List;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ClienteController {
 
-    //mecher
-    private final ClienteService service;
-    private final ObjectMapper objectMapper;
 
-    public ClienteController(ClienteService service, ObjectMapper objectMapper) {
+    private final ClienteService service;
+
+    public ClienteController(ClienteService service) {
         this.service = service;
-        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -36,60 +29,43 @@ public class ClienteController {
         return ResponseEntity.ok(clientes);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ClienteDTO> buscaPorId(@PathVariable Long id) {
-        ClienteDTO cliente = service.findById(id);
-        return ResponseEntity.ok(cliente);
-    }
-
     @GetMapping("/nome/{nome}")
     public ResponseEntity<ClienteDTO> buscarPorNome(@PathVariable String nome) {
         ClienteDTO cliente = service.findByNome(nome);
         return ResponseEntity.ok(cliente);
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<ClienteDTO> criar(
-            @RequestParam String nome,
-            @RequestParam String cpf,
-            @RequestParam String telefone,
-            @RequestParam String tamanho,
-            @RequestParam(required = false) MultipartFile foto,
-            @RequestParam(required = false) String endereco
-    ) throws IOException {
-
-        // Criar ClienteDTO
-        ClienteDTO clienteDTO = new ClienteDTO(
-                null,
-                nome,
-                telefone,
-                null,
-                cpf,
-                tamanho,
-                null
-        );
-
-        // Fazer upload da foto e salvar cliente
-        ClienteDTO clienteSalva = service.insert(clienteDTO, foto);
-
-        // Se enviou endereços, adicionar ao cliente
-        if (endereco != null && !endereco.isEmpty()) {
-            List<Endereco> enderecos = objectMapper.readValue(
-                    endereco,
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, Endereco.class)
-            );
-            clienteSalva = service.adicionarEnderecos(clienteSalva.id(), enderecos);
-        }
-
+    @PostMapping
+    public ResponseEntity<ClienteDTO> criar(@RequestBody @Valid ClienteDTO clienteDTO) {
+        ClienteDTO clienteSalva = service.insert(clienteDTO);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(clienteSalva.id()).toUri();
         return ResponseEntity.created(uri).body(clienteSalva);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteDTO> atualizar(@PathVariable Long id, @RequestBody ClienteDTO clienteDTO) {
-        ClienteDTO clienteAtualizado = service.atualizar(id, clienteDTO);
+    public ResponseEntity<ClienteDTO> atualizarCliente(@PathVariable Long id, @RequestBody ClienteDTO clienteDTO) {
+        ClienteDTO clienteAtualizado = service.atualizarCliente(id, clienteDTO);
         return ResponseEntity.ok(clienteAtualizado);
+    }
+
+    @PostMapping("/{id}/enderecos")
+    public ResponseEntity<ClienteDTO> criarEndereco(
+            @PathVariable Long id,
+            @RequestBody EnderecoDTO enderecoDTO) {
+        ClienteDTO cliente = service.criarEndereco(id, enderecoDTO);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(cliente.id()).toUri();
+        return ResponseEntity.created(uri).body(cliente);
+    }
+
+    @PutMapping("/{id}/enderecos/{enderecoId}")
+    public ResponseEntity<ClienteDTO> atualizarEndereco(
+            @PathVariable Long id,
+            @PathVariable Long enderecoId,
+            @RequestBody EnderecoDTO enderecoDTO) {
+        ClienteDTO cliente = service.atualizarEndereco(id, enderecoId, enderecoDTO);
+        return ResponseEntity.ok(cliente);
     }
 
     @DeleteMapping("/{id}")

@@ -24,7 +24,6 @@ public class Venda {
 
         private LocalDateTime data;
 
-        @Column(nullable = false)
         @ManyToOne
         private Cliente cliente;
 

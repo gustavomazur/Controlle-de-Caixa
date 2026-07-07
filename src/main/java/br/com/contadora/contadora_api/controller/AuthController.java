@@ -15,8 +15,6 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
-
-    //ser mechida
     private final AuthService authService;
 
     public AuthController(AuthService authService) {

@@ -20,13 +20,8 @@ public class Cliente {
     private String nome;
     @Column(nullable = false, unique = true)
     private String telefone;
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String cpf;
-    @Column(nullable = false)
-    private String tamanho;
-
-    @Column(length = 1000)
-    private String foto;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_cliente")

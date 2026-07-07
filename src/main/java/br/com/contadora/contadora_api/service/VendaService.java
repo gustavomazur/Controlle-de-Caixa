@@ -8,6 +8,7 @@ import br.com.contadora.contadora_api.mapper.VendaMapper;
 import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.Produto.Produto;
 import br.com.contadora.contadora_api.model.caixa.Caixa;
+import br.com.contadora.contadora_api.model.usuario.Usuario;
 import br.com.contadora.contadora_api.model.venda.ItemVenda;
 import br.com.contadora.contadora_api.model.venda.Venda;
 import br.com.contadora.contadora_api.repository.CaixaRepository;
@@ -16,6 +17,7 @@ import br.com.contadora.contadora_api.repository.ProdutoRepository;
 import br.com.contadora.contadora_api.repository.VendaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -59,7 +61,7 @@ public class VendaService {
         }
         Venda venda = vendaMapper.paraEntidade(request);
 
-        Cliente cliente = clienteRepository.findByNome(request.clienteNome())
+        Cliente cliente = clienteRepository.findByNomeIgnoreCase(request.clienteNome())
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
 
 
@@ -67,7 +69,7 @@ public class VendaService {
         venda.setData(LocalDateTime.now());
         venda.setValorTotal(BigDecimal.ZERO);
         venda.setLucroTotal(BigDecimal.ZERO);
-        venda.setDesconto(BigDecimal.ZERO);
+        venda.setDesconto(request.desconto() != null ? request.desconto() : BigDecimal.ZERO);
         venda.setItens(new ArrayList<>());
 
         for (ItemVendaRequest itemRequest : request.itens()) {
@@ -80,19 +82,22 @@ public class VendaService {
             if (itemRequest.quantidade() > produto.getQuantidade()) {
                 throw new IllegalArgumentException("Estoque insuficiente " + produto.getNome());
             }
-            //precoVendido == null
             if (itemRequest.precoVendido() == null ) {
                 throw new IllegalArgumentException("Preço vendido não informado para " + produto.getNome());
             }
 
             BigDecimal quantidade = BigDecimal.valueOf(itemRequest.quantidade());
-            BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra();
+            BigDecimal precoDeCompraNoMomento = produto.getPrecoDeCompra() != null
+                    ? produto.getPrecoDeCompra() : BigDecimal.ZERO;
 
             BigDecimal lucroDoItem = itemRequest.precoVendido()
                     .subtract(precoDeCompraNoMomento)
                     .multiply(quantidade);
 
-            BigDecimal descontoItem = produto.getPrecoDeVenda()
+            BigDecimal precoDeVenda = produto.getPrecoDeVenda() != null
+                    ? produto.getPrecoDeVenda() : BigDecimal.ZERO;
+
+            BigDecimal descontoItem = precoDeVenda
                     .subtract(itemRequest.precoVendido())
                     .multiply(quantidade);
 
@@ -120,8 +125,16 @@ public class VendaService {
             }
         }
 
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encotrando"));
+        Usuario usuario = (Usuario) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        Caixa caixa = caixaRepository.findByUsuarioId(usuario.getId())
+                .orElseGet(() -> {
+                    Caixa novo = new Caixa();
+                    novo.setSaldo(BigDecimal.ZERO);
+                    novo.setUsuario(usuario);
+                    return caixaRepository.save(novo);
+                });
 
         caixa.setSaldo(caixa.getSaldo().add(venda.getValorTotal()));
         caixaRepository.save(caixa);

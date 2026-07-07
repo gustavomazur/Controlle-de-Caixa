@@ -5,17 +5,13 @@ import br.com.contadora.contadora_api.dto.VendaDTO;
 import br.com.contadora.contadora_api.dto.VendaRequest;
 import br.com.contadora.contadora_api.service.VendaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
 @RequestMapping("/vendas")
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class VendaController {
-    //mecher
     private final VendaService vendaService;
 
     public VendaController(VendaService vendaService) {
