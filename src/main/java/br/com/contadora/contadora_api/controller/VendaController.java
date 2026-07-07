@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/vendas")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class VendaController {
-    //mecher
     private final VendaService vendaService;
 
     public VendaController(VendaService vendaService) {

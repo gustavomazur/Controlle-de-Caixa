@@ -2,9 +2,9 @@ package br.com.contadora.contadora_api.service;
 
 import br.com.contadora.contadora_api.model.caixa.Caixa;
 import br.com.contadora.contadora_api.model.caixa.CaixaMovimentacao;
+import br.com.contadora.contadora_api.model.usuario.Usuario;
 import br.com.contadora.contadora_api.repository.CaixaMovimentacaoRepository;
 import br.com.contadora.contadora_api.repository.CaixaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,16 +22,23 @@ public class CaixaService {
     @Autowired
     private CaixaMovimentacaoRepository caixaMovimentacaoRepository;
 
-    public BigDecimal consultarSaldo() {
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado"));
-        return caixa.getSaldo();
+    private Caixa buscarOuCriarCaixa(Usuario usuario) {
+        return caixaRepository.findByUsuarioId(usuario.getId())
+                .orElseGet(() -> {
+                    Caixa novo = new Caixa();
+                    novo.setSaldo(BigDecimal.ZERO);
+                    novo.setUsuario(usuario);
+                    return caixaRepository.save(novo);
+                });
+    }
+
+    public BigDecimal consultarSaldo(Usuario usuario) {
+        return buscarOuCriarCaixa(usuario).getSaldo();
     }
 
     @Transactional
-    public CaixaMovimentacao entrada(BigDecimal valor, String descricao) {
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado"));
+    public CaixaMovimentacao entrada(BigDecimal valor, String descricao, Usuario usuario) {
+        Caixa caixa = buscarOuCriarCaixa(usuario);
 
         caixa.setSaldo(caixa.getSaldo().add(valor));
         caixaRepository.save(caixa);
@@ -47,9 +54,8 @@ public class CaixaService {
     }
 
     @Transactional
-    public CaixaMovimentacao saida(BigDecimal valor, String descricao) {
-        Caixa caixa = caixaRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrado"));
+    public CaixaMovimentacao saida(BigDecimal valor, String descricao, Usuario usuario) {
+        Caixa caixa = buscarOuCriarCaixa(usuario);
 
         if (caixa.getSaldo().compareTo(valor) < 0) {
             throw new IllegalArgumentException("Saldo insuficiente");
@@ -68,7 +74,8 @@ public class CaixaService {
         return caixaMovimentacaoRepository.save(movimentacao);
     }
 
-    public List<CaixaMovimentacao> historico(LocalDateTime inicio, LocalDateTime fim) {
-        return caixaMovimentacaoRepository.findByDataHoraBetween(inicio, fim);
+    public List<CaixaMovimentacao> historico(LocalDateTime inicio, LocalDateTime fim, Usuario usuario) {
+        Caixa caixa = buscarOuCriarCaixa(usuario);
+        return caixaMovimentacaoRepository.findByCaixaIdAndDataHoraBetween(caixa.getId(), inicio, fim);
     }
 }

@@ -24,7 +24,7 @@ public class Produto {
     private BigDecimal precoDeCompra;
     private BigDecimal precoDeVenda;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String barraDoProduto;
 
     @ManyToOne(fetch = FetchType.LAZY)

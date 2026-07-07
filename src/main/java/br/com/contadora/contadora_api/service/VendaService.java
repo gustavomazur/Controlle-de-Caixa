@@ -8,6 +8,7 @@ import br.com.contadora.contadora_api.mapper.VendaMapper;
 import br.com.contadora.contadora_api.model.Cliente.Cliente;
 import br.com.contadora.contadora_api.model.Produto.Produto;
 import br.com.contadora.contadora_api.model.caixa.Caixa;
+import br.com.contadora.contadora_api.model.usuario.Usuario;
 import br.com.contadora.contadora_api.model.venda.ItemVenda;
 import br.com.contadora.contadora_api.model.venda.Venda;
 import br.com.contadora.contadora_api.repository.CaixaRepository;
@@ -16,6 +17,7 @@ import br.com.contadora.contadora_api.repository.ProdutoRepository;
 import br.com.contadora.contadora_api.repository.VendaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -80,7 +82,6 @@ public class VendaService {
             if (itemRequest.quantidade() > produto.getQuantidade()) {
                 throw new IllegalArgumentException("Estoque insuficiente " + produto.getNome());
             }
-            //precoVendido == null
             if (itemRequest.precoVendido() == null ) {
                 throw new IllegalArgumentException("Preço vendido não informado para " + produto.getNome());
             }
@@ -124,11 +125,16 @@ public class VendaService {
             }
         }
 
-        Caixa caixa = caixaRepository.findById(1L).orElseGet(() -> {
-            Caixa novo = new Caixa();
-            novo.setSaldo(BigDecimal.ZERO);
-            return caixaRepository.save(novo);
-        });
+        Usuario usuario = (Usuario) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        Caixa caixa = caixaRepository.findByUsuarioId(usuario.getId())
+                .orElseGet(() -> {
+                    Caixa novo = new Caixa();
+                    novo.setSaldo(BigDecimal.ZERO);
+                    novo.setUsuario(usuario);
+                    return caixaRepository.save(novo);
+                });
 
         caixa.setSaldo(caixa.getSaldo().add(venda.getValorTotal()));
         caixaRepository.save(caixa);

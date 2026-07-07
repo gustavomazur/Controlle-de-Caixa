@@ -8,5 +8,6 @@ import java.util.List;
 
 public interface CaixaMovimentacaoRepository extends JpaRepository<CaixaMovimentacao, Long> {
     List<CaixaMovimentacao> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
+    List<CaixaMovimentacao> findByCaixaIdAndDataHoraBetween(Long caixaId, LocalDateTime inicio, LocalDateTime fim);
     List<CaixaMovimentacao> findAllByOrderByDataHoraDesc();
 }
